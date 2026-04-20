@@ -45,6 +45,7 @@ export interface Member {
   avatar: string | null;
   email: string | null;
   is_active: boolean;
+  slack_user_id: string | null;
 }
 
 export interface Project {
