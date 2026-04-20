@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     const { data: tasks, error } = await supabase
       .from("tasks")
-      .select("id, title, due_date, status, assignee_id, members:assignee_id(name)")
+      .select("id, title, due_date, status, assignee_id, members:assignee_id(name, slack_user_id)")
       .neq("status", "done")
       .not("due_date", "is", null)
       .lte("due_date", tomorrowStr);
@@ -54,9 +54,22 @@ Deno.serve(async (req) => {
     const tomo = (tasks || []).filter((t: any) => t.due_date === tomorrowStr);
 
     const renderItem = (t: any) => {
-      const who = t.members?.name ? `（${t.members.name}）` : "";
+      const slackId = t.members?.slack_user_id;
+      const who = slackId
+        ? `（<@${slackId}>）`
+        : t.members?.name ? `（${t.members.name}）` : "";
       return `• ${t.title}${who} — \`${t.due_date}\``;
     };
+
+    // Collect unique mention IDs to prefix the message (ensures push notifications)
+    const mentionIds = Array.from(
+      new Set(
+        [...overdue, ...today, ...tomo]
+          .map((t: any) => t.members?.slack_user_id)
+          .filter((x: any) => !!x),
+      ),
+    );
+    const mentionLine = mentionIds.map((id) => `<@${id}>`).join(" ");
 
     const blocks: any[] = [
       {
@@ -66,10 +79,17 @@ Deno.serve(async (req) => {
       {
         type: "context",
         elements: [
-          { type: "mrkdwn", text: `*${todayStr}* (JST 12:00) のリマインドです` },
+          { type: "mrkdwn", text: `*${todayStr}* (JST) のリマインドです` },
         ],
       },
     ];
+
+    if (mentionLine) {
+      blocks.push({
+        type: "section",
+        text: { type: "mrkdwn", text: mentionLine },
+      });
+    }
 
     if (overdue.length === 0 && today.length === 0 && tomo.length === 0) {
       blocks.push({
@@ -109,7 +129,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const fallback = `期日リマインド: 期限超過${overdue.length}件 / 今日${today.length}件 / 明日${tomo.length}件`;
+    const fallback = `${mentionLine ? mentionLine + " " : ""}期日リマインド: 期限超過${overdue.length}件 / 今日${today.length}件 / 明日${tomo.length}件`;
 
     const slackRes = await fetch(`${GATEWAY_URL}/chat.postMessage`, {
       method: "POST",
