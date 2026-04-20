@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const fallback = `期日リマインド: 期限超過${overdue.length}件 / 今日${today.length}件 / 明日${tomo.length}件`;
+    const fallback = `${mentionLine ? mentionLine + " " : ""}期日リマインド: 期限超過${overdue.length}件 / 今日${today.length}件 / 明日${tomo.length}件`;
 
     const slackRes = await fetch(`${GATEWAY_URL}/chat.postMessage`, {
       method: "POST",
