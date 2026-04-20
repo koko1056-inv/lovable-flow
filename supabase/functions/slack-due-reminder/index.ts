@@ -79,10 +79,17 @@ Deno.serve(async (req) => {
       {
         type: "context",
         elements: [
-          { type: "mrkdwn", text: `*${todayStr}* (JST 12:00) のリマインドです` },
+          { type: "mrkdwn", text: `*${todayStr}* (JST) のリマインドです` },
         ],
       },
     ];
+
+    if (mentionLine) {
+      blocks.push({
+        type: "section",
+        text: { type: "mrkdwn", text: mentionLine },
+      });
+    }
 
     if (overdue.length === 0 && today.length === 0 && tomo.length === 0) {
       blocks.push({
