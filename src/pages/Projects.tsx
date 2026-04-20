@@ -35,7 +35,7 @@ export default function ProjectsPage() {
         </div>
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
           <DialogTrigger asChild><Button onClick={() => setEditing(null)}><Plus className="h-4 w-4" />追加</Button></DialogTrigger>
-          <ProjectForm project={editing} onClose={() => { setOpen(false); setEditing(null); invalidate(["projects"]); }} />
+          {open && <ProjectForm key={editing?.id || "new"} project={editing} onClose={() => { setOpen(false); setEditing(null); invalidate(["projects"]); }} />}
         </Dialog>
       </div>
 
