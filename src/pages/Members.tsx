@@ -65,10 +65,11 @@ function MemberForm({ member, onClose }: { member: Member | null; onClose: () =>
   const [email, setEmail] = useState(member?.email || "");
   const [color, setColor] = useState(member?.color || COLORS[0]);
   const [avatar, setAvatar] = useState(member?.avatar || "");
+  const [slackUserId, setSlackUserId] = useState(member?.slack_user_id || "");
 
   const save = async () => {
     if (!name.trim()) return toast.error("名前を入力してください");
-    const payload = { name: name.trim(), email: email.trim() || null, color, avatar: avatar.trim() || null };
+    const payload = { name: name.trim(), email: email.trim() || null, color, avatar: avatar.trim() || null, slack_user_id: slackUserId.trim() || null };
     const { error } = member
       ? await supabase.from("members").update(payload).eq("id", member.id)
       : await supabase.from("members").insert(payload);
@@ -84,6 +85,7 @@ function MemberForm({ member, onClose }: { member: Member | null; onClose: () =>
         <div><Label>名前 *</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div><Label>メール</Label><Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" /></div>
         <div><Label>イニシャル/絵文字 (任意)</Label><Input value={avatar} onChange={(e) => setAvatar(e.target.value)} maxLength={2} placeholder="例: 山" /></div>
+        <div><Label>Slack User ID (任意)</Label><Input value={slackUserId} onChange={(e) => setSlackUserId(e.target.value)} placeholder="例: U0123ABCD" /></div>
         <div>
           <Label className="mb-2 block">カラー</Label>
           <div className="flex flex-wrap gap-2">

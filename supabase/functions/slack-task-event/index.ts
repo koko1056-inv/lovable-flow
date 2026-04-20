@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const { data: task, error } = await supabase
       .from("tasks")
-      .select("id, title, due_date, priority, status, members:assignee_id(name), projects:project_id(name)")
+      .select("id, title, due_date, priority, status, members:assignee_id(name, slack_user_id), projects:project_id(name)")
       .eq("id", taskId)
       .maybeSingle();
     if (error) throw error;
@@ -49,7 +49,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const who = (task as any).members?.name ?? "未割当";
+    const memberObj = (task as any).members;
+    const slackId: string | null = memberObj?.slack_user_id ?? null;
+    const memberName: string = memberObj?.name ?? "未割当";
+    const who = slackId ? `<@${slackId}>` : memberName;
     const proj = (task as any).projects?.name ?? "—";
     const due = task.due_date ?? "—";
 
@@ -57,7 +60,8 @@ Deno.serve(async (req) => {
     const emoji = isCreated ? "🆕" : "✅";
     const headerText = isCreated ? "新しいタスクが追加されました" : "タスクが完了しました";
 
-    const fallback = `${emoji} ${headerText}: ${task.title}`;
+    const mentionPrefix = slackId ? `<@${slackId}> ` : "";
+    const fallback = `${mentionPrefix}${emoji} ${headerText}: ${task.title}`;
 
     const blocks = [
       {
