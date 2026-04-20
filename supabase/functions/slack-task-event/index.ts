@@ -63,22 +63,28 @@ Deno.serve(async (req) => {
     const mentionPrefix = slackId ? `<@${slackId}> ` : "";
     const fallback = `${mentionPrefix}${emoji} ${headerText}: ${task.title}`;
 
-    const blocks = [
+    const blocks: any[] = [
       {
         type: "header",
         text: { type: "plain_text", text: `${emoji} ${headerText}` },
       },
-      {
-        type: "section",
-        text: { type: "mrkdwn", text: `*${task.title}*` },
-        fields: [
-          { type: "mrkdwn", text: `*担当:*\n${who}` },
-          { type: "mrkdwn", text: `*プロジェクト:*\n${proj}` },
-          { type: "mrkdwn", text: `*期日:*\n${due}` },
-          { type: "mrkdwn", text: `*優先度:*\n${task.priority}` },
-        ],
-      },
     ];
+    if (slackId) {
+      blocks.push({
+        type: "section",
+        text: { type: "mrkdwn", text: `<@${slackId}>` },
+      });
+    }
+    blocks.push({
+      type: "section",
+      text: { type: "mrkdwn", text: `*${task.title}*` },
+      fields: [
+        { type: "mrkdwn", text: `*担当:*\n${who}` },
+        { type: "mrkdwn", text: `*プロジェクト:*\n${proj}` },
+        { type: "mrkdwn", text: `*期日:*\n${due}` },
+        { type: "mrkdwn", text: `*優先度:*\n${task.priority}` },
+      ],
+    });
 
     const slackRes = await fetch(`${GATEWAY_URL}/chat.postMessage`, {
       method: "POST",
