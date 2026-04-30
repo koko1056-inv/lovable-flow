@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.notify_slack_task_event() CASCADE;
