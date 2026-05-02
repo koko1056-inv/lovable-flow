@@ -17,9 +17,52 @@ import { PRIORITY_LABELS } from "@/lib/types";
 export default function BoardPage() {
   const { data: tasks = [] } = useTasks();
   const { data: members = [] } = useMembers();
+  const { data: projects = [] } = useProjects();
   const qc = useQueryClient();
   const { memberId } = useCurrentMember();
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+
+  const exportCsv = () => {
+    const filtered = tasks.filter((t) => {
+      if (t.parent_task_id) return false;
+      if (assigneeFilter === "me") return t.assignee_id === memberId;
+      if (assigneeFilter !== "all") return t.assignee_id === assigneeFilter;
+      return true;
+    });
+    const memberMap = new Map(members.map((m) => [m.id, m.name]));
+    const projectMap = new Map(projects.map((p) => [p.id, p.name]));
+    const headers = ["タイトル", "ステータス", "優先度", "担当者", "プロジェクト", "期日", "期限時刻", "進捗(%)", "説明", "作成日", "完了日"];
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = STATUS_ORDER.flatMap((s) =>
+      filtered
+        .filter((t) => t.status === s)
+        .map((t) => [
+          t.title,
+          STATUS_LABELS[t.status],
+          PRIORITY_LABELS[t.priority],
+          t.assignee_id ? memberMap.get(t.assignee_id) ?? "" : "",
+          t.project_id ? projectMap.get(t.project_id) ?? "" : "",
+          t.due_date ?? "",
+          t.due_time ?? "",
+          t.progress,
+          t.description ?? "",
+          t.created_at ? new Date(t.created_at).toLocaleString("ja-JP") : "",
+          t.completed_at ? new Date(t.completed_at).toLocaleString("ja-JP") : "",
+        ]),
+    );
+    const csv = [headers, ...rows].map((r) => r.map(escape).join(",")).join("\n");
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kanban_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${rows.length}件のタスクをCSVに出力しました`);
+  };
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
