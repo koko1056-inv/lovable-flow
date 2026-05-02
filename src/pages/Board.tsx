@@ -111,6 +111,10 @@ export default function BoardPage() {
               {members.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Button variant="outline" size="sm" onClick={exportCsv}>
+            <Download className="h-4 w-4" />
+            CSV出力
+          </Button>
           <NewTaskButton />
         </div>
       </div>
