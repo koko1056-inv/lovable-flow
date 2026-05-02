@@ -8,8 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentMember } from "@/hooks/useCurrentMember";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useMembers } from "@/hooks/useTaskflowData";
+import { useMembers, useProjects } from "@/hooks/useTaskflowData";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { PRIORITY_LABELS } from "@/lib/types";
 
 export default function BoardPage() {
   const { data: tasks = [] } = useTasks();
