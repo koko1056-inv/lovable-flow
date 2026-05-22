@@ -53,7 +53,7 @@ export default function CalendarPage() {
         </div>
         <div className="grid grid-cols-7">
           {days.map((d) => {
-            const key = d.toISOString().slice(0, 10);
+            const key = format(d, "yyyy-MM-dd");
             const dayTasks = tasksByDate.get(key) || [];
             const inMonth = isSameMonth(d, cursor);
             return (
