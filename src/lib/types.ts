@@ -74,9 +74,40 @@ export interface Task {
   project_id: string | null;
   parent_task_id: string | null;
   template_id: string | null;
+  goal_id: string | null;
   progress: number;
   position: number;
   completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type GoalStatus = "not_started" | "in_progress" | "achieved" | "missed";
+
+export const GOAL_STATUS_LABELS: Record<GoalStatus, string> = {
+  not_started: "未着手",
+  in_progress: "進行中",
+  achieved: "達成",
+  missed: "未達",
+};
+
+export const GOAL_STATUS_COLORS: Record<GoalStatus, string> = {
+  not_started: "bg-muted text-muted-foreground border-border",
+  in_progress: "bg-status-progress/15 text-status-progress border-status-progress/30",
+  achieved: "bg-status-done/15 text-status-done border-status-done/30",
+  missed: "bg-priority-urgent/15 text-priority-urgent border-priority-urgent/30",
+};
+
+export interface Goal {
+  id: string;
+  project_id: string | null;
+  parent_goal_id: string | null;
+  month: string;
+  title: string;
+  description: string | null;
+  status: GoalStatus;
+  progress: number;
+  position: number;
   created_at: string;
   updated_at: string;
 }
