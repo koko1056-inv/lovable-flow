@@ -144,7 +144,7 @@ export default function GoalsPage() {
   );
 }
 
-function GoalSummary({ goal, tasks }: { goal: Goal; tasks: Task[] }) {
+function computeGoalStats(goal: Goal, tasks: Task[]) {
   const linked = tasks.filter((t) => t.goal_id === goal.id);
   const done = linked.filter((t) => t.status === "done").length;
   const pct = goal.progress || (linked.length ? Math.round((done / linked.length) * 100) : 0);
