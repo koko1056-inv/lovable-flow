@@ -92,6 +92,63 @@ export type Database = {
           },
         ]
       }
+      goals: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          month: string
+          parent_goal_id: string | null
+          position: number
+          progress: number
+          project_id: string | null
+          status: Database["public"]["Enums"]["goal_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          month: string
+          parent_goal_id?: string | null
+          position?: number
+          progress?: number
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["goal_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          month?: string
+          parent_goal_id?: string | null
+          position?: number
+          progress?: number
+          project_id?: string | null
+          status?: Database["public"]["Enums"]["goal_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_parent_goal_id_fkey"
+            columns: ["parent_goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           avatar: string | null
@@ -367,6 +424,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           due_time: string | null
+          goal_id: string | null
           id: string
           parent_task_id: string | null
           position: number
@@ -385,6 +443,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           due_time?: string | null
+          goal_id?: string | null
           id?: string
           parent_task_id?: string | null
           position?: number
@@ -403,6 +462,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           due_time?: string | null
+          goal_id?: string | null
           id?: string
           parent_task_id?: string | null
           position?: number
@@ -420,6 +480,13 @@ export type Database = {
             columns: ["assignee_id"]
             isOneToOne: false
             referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
             referencedColumns: ["id"]
           },
           {
@@ -453,6 +520,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      goal_status: "not_started" | "in_progress" | "achieved" | "missed"
       recurrence_type: "daily" | "weekly"
       task_priority: "low" | "medium" | "high" | "urgent"
       task_status: "todo" | "in_progress" | "review" | "done"
@@ -583,6 +651,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      goal_status: ["not_started", "in_progress", "achieved", "missed"],
       recurrence_type: ["daily", "weekly"],
       task_priority: ["low", "medium", "high", "urgent"],
       task_status: ["todo", "in_progress", "review", "done"],
