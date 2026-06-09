@@ -138,11 +138,43 @@ export default function GoalsPage() {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 p-3 border rounded-lg bg-card/50">
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="目標を検索..." className="h-8 pl-8 pr-7" />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 hover:bg-accent rounded">
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+        <Select value={projectFilter} onValueChange={setProjectFilter}>
+          <SelectTrigger className="h-8 w-44 text-xs"><SelectValue placeholder="事業部" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全事業部</SelectItem>
+            {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+          <SelectTrigger className="h-8 w-44 text-xs"><SelectValue placeholder="担当者" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全担当者</SelectItem>
+            {members.filter((m) => m.is_active).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {(search || projectFilter !== "all" || assigneeFilter !== "all") && (
+          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setSearch(""); setProjectFilter("all"); setAssigneeFilter("all"); }}>
+            クリア
+          </Button>
+        )}
+      </div>
+
       <Tabs defaultValue="dashboard">
         <TabsList>
           <TabsTrigger value="dashboard"><LayoutDashboard className="h-3.5 w-3.5 mr-1" />月次ダッシュボード</TabsTrigger>
           <TabsTrigger value="tree"><Network className="h-3.5 w-3.5 mr-1" />樹形図</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="dashboard" className="mt-4">
           <Dashboard
