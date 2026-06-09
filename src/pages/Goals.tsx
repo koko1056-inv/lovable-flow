@@ -300,20 +300,18 @@ function GoalRow({
         <div className="flex items-start gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-sm">{goal.title}</span>
-              <Badge variant="outline" className={cn("text-[10px]", GOAL_STATUS_COLORS[goal.status])}>
-                {GOAL_STATUS_LABELS[goal.status]}
-              </Badge>
+              <InlineGoalTitle goal={goal} />
+              <InlineGoalStatus goal={goal} />
             </div>
             {goal.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{goal.description}</p>}
             <div className="flex items-center gap-2 mt-2">
               <Progress value={pct} className="h-1.5 flex-1" />
-              <span className="text-[11px] text-muted-foreground tabular-nums">
-                {pct}% ({done}/{linked.length})
-              </span>
+              <InlineGoalProgress goal={goal} pct={pct} />
+              <span className="text-[11px] text-muted-foreground tabular-nums">({done}/{linked.length})</span>
             </div>
           </div>
           <div className="flex opacity-0 group-hover:opacity-100 transition">
+            <QuickAddTaskToGoal goal={goal} />
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onCreate(goal.project_id, goal.id)} title="子目標を追加">
               <Plus className="h-3.5 w-3.5" />
             </Button>
