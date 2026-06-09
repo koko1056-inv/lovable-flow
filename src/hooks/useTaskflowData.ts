@@ -1,6 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Member, Project, Tag, Task, RecurringTemplate } from "@/lib/types";
+import type { Member, Project, Tag, Task, RecurringTemplate, Goal } from "@/lib/types";
+
+export const useGoals = () =>
+  useQuery({
+    queryKey: ["goals"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("goals")
+        .select("*")
+        .order("month", { ascending: false })
+        .order("position", { ascending: true });
+      if (error) throw error;
+      return data as Goal[];
+    },
+  });
+
 
 export const useMembers = () =>
   useQuery({

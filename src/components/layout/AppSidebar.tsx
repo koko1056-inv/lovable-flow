@@ -1,4 +1,4 @@
-import { LayoutGrid, Calendar, List, User, Users, FolderKanban, Tag as TagIcon, Repeat, CheckSquare } from "lucide-react";
+import { LayoutGrid, Calendar, List, User, Users, FolderKanban, Tag as TagIcon, Repeat, CheckSquare, Target } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -18,6 +18,7 @@ const viewItems = [
   { title: "カンバン", url: "/board", icon: LayoutGrid },
   { title: "リスト", url: "/list", icon: List },
   { title: "カレンダー", url: "/calendar", icon: Calendar },
+  { title: "目標", url: "/goals", icon: Target },
 ];
 
 const manageItems = [

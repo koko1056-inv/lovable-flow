@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useTaskDetail } from "@/hooks/useTaskDetail";
-import { useTasks, useMembers, useProjects, useTags, useTaskTags } from "@/hooks/useTaskflowData";
+import { useTasks, useMembers, useProjects, useTags, useTaskTags, useGoals } from "@/hooks/useTaskflowData";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useCurrentMember } from "@/hooks/useCurrentMember";
@@ -39,6 +39,7 @@ function TaskDetailContent({ task, onClose }: { task: Task; onClose: () => void 
   const { data: projects = [] } = useProjects();
   const { data: tags = [] } = useTags();
   const { data: taskTags = [] } = useTaskTags();
+  const { data: goals = [] } = useGoals();
   const { memberId } = useCurrentMember();
   const { data: tasks = [] } = useTasks();
 
@@ -201,6 +202,34 @@ function TaskDetailContent({ task, onClose }: { task: Task; onClose: () => void 
               className="h-9 mt-1"
             />
           </div>
+        </div>
+
+        <div>
+          <Label className="text-xs">紐付け目標</Label>
+          <Select
+            value={draft.goal_id || "none"}
+            onValueChange={(v) => {
+              const newId = v === "none" ? null : v;
+              setDraft({ ...draft, goal_id: newId });
+              update({ goal_id: newId }, { action: "目標変更" });
+            }}
+          >
+            <SelectTrigger className="h-9 mt-1"><SelectValue placeholder="なし" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">なし</SelectItem>
+              {goals
+                .filter((g) => !draft.project_id || !g.project_id || g.project_id === draft.project_id)
+                .map((g) => {
+                  const proj = projects.find((p) => p.id === g.project_id);
+                  const month = g.month.slice(0, 7);
+                  return (
+                    <SelectItem key={g.id} value={g.id}>
+                      [{month}] {proj?.name ? `${proj.name} / ` : ""}{g.title}
+                    </SelectItem>
+                  );
+                })}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
