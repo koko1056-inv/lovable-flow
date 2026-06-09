@@ -56,6 +56,13 @@ export interface Project {
   is_archived: boolean;
 }
 
+export interface ProjectMember {
+  id: string;
+  project_id: string;
+  member_id: string;
+  created_at: string;
+}
+
 export interface Tag {
   id: string;
   name: string;
