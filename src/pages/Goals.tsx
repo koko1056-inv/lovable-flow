@@ -438,11 +438,12 @@ function TreeNode({
   onOpenTask: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const [showTasks, setShowTasks] = useState(false);
   const children = allInProject.filter((g) => g.parent_goal_id === goal.id);
   const linked = tasks.filter((t) => t.goal_id === goal.id);
   const done = linked.filter((t) => t.status === "done").length;
   const pct = goal.progress || (linked.length ? Math.round((done / linked.length) * 100) : 0);
-  const hasChildren = children.length > 0 || linked.length > 0;
+  const hasChildren = children.length > 0;
 
   return (
     <div>
@@ -460,6 +461,13 @@ function TreeNode({
         <div className="min-w-0"><InlineGoalTitle goal={goal} /></div>
         <div className="ml-1"><InlineGoalStatus goal={goal} /></div>
         <div className="ml-1"><InlineGoalProgress goal={goal} pct={pct} /></div>
+        <button
+          className="text-[11px] text-muted-foreground tabular-nums hover:text-foreground hover:underline ml-1"
+          onClick={(e) => { e.stopPropagation(); setShowTasks((v) => !v); }}
+          title={showTasks ? "タスク一覧を閉じる" : "タスク一覧を開く"}
+        >
+          ({done}/{linked.length})
+        </button>
         <div className="ml-auto flex opacity-0 group-hover:opacity-100 transition">
           <QuickAddTaskToGoal goal={goal} />
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onCreate(goal.project_id, goal.id)} title="子目標">
@@ -473,10 +481,10 @@ function TreeNode({
           </Button>
         </div>
       </div>
-      {expanded && (
-        <>
+      {showTasks && linked.length > 0 && (
+        <ul className="space-y-0.5">
           {linked.map((t) => (
-            <div
+            <li
               key={t.id}
               className="flex items-center gap-1 py-1 text-sm hover:bg-accent/40 rounded cursor-pointer"
               style={{ paddingLeft: depth * 20 + 28 }}
@@ -487,8 +495,12 @@ function TreeNode({
               <Badge variant="outline" className={cn("text-[10px] ml-1", STATUS_COLORS[t.status])}>
                 {STATUS_LABELS[t.status]}
               </Badge>
-            </div>
+            </li>
           ))}
+        </ul>
+      )}
+      {expanded && (
+        <>
           {children.map((c) => (
             <TreeNode
               key={c.id} goal={c} depth={depth + 1} allInProject={allInProject} tasks={tasks}
