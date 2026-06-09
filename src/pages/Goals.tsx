@@ -9,8 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Target, ChevronRight, ChevronDown, Edit, Trash2, ListChecks, Network, LayoutDashboard } from "lucide-react";
-import { useGoals, useProjects, useTasks, useInvalidate } from "@/hooks/useTaskflowData";
+import { Plus, Target, ChevronRight, ChevronDown, Edit, Trash2, ListChecks, Network, LayoutDashboard, Search, X } from "lucide-react";
+import { useGoals, useProjects, useTasks, useInvalidate, useMembers } from "@/hooks/useTaskflowData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTaskDetail } from "@/hooks/useTaskDetail";
@@ -23,8 +23,10 @@ import {
   type GoalStatus,
   type Task,
   type Project,
+  type Member,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { InlineGoalTitle, InlineGoalStatus, InlineGoalProgress, QuickAddTaskToGoal } from "@/components/goals/GoalInlineControls";
 
 function monthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
