@@ -39,6 +39,7 @@ function TaskDetailContent({ task, onClose }: { task: Task; onClose: () => void 
   const { data: projects = [] } = useProjects();
   const { data: tags = [] } = useTags();
   const { data: taskTags = [] } = useTaskTags();
+  const { data: goals = [] } = useGoals();
   const { memberId } = useCurrentMember();
   const { data: tasks = [] } = useTasks();
 
