@@ -432,12 +432,11 @@ function TreeNode({
           {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
         </button>
         <Target className="h-3.5 w-3.5 text-primary shrink-0" />
-        <span className="font-medium text-sm truncate">{goal.title}</span>
-        <Badge variant="outline" className={cn("text-[10px] ml-1", GOAL_STATUS_COLORS[goal.status])}>
-          {GOAL_STATUS_LABELS[goal.status]}
-        </Badge>
-        <span className="text-[11px] text-muted-foreground ml-1 tabular-nums">{pct}%</span>
+        <div className="min-w-0"><InlineGoalTitle goal={goal} /></div>
+        <div className="ml-1"><InlineGoalStatus goal={goal} /></div>
+        <div className="ml-1"><InlineGoalProgress goal={goal} pct={pct} /></div>
         <div className="ml-auto flex opacity-0 group-hover:opacity-100 transition">
+          <QuickAddTaskToGoal goal={goal} />
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onCreate(goal.project_id, goal.id)} title="子目標">
             <Plus className="h-3 w-3" />
           </Button>
