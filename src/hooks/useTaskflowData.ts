@@ -1,6 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Member, Project, Tag, Task, RecurringTemplate, Goal } from "@/lib/types";
+import type { Member, Project, ProjectMember, Tag, Task, RecurringTemplate, Goal } from "@/lib/types";
+
+export const useProjectMembers = () =>
+  useQuery({
+    queryKey: ["project_members"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("project_members").select("*");
+      if (error) throw error;
+      return data as ProjectMember[];
+    },
+  });
 
 export const useGoals = () =>
   useQuery({

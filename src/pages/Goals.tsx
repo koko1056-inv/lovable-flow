@@ -9,8 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Target, ChevronRight, ChevronDown, Edit, Trash2, ListChecks, Network, LayoutDashboard } from "lucide-react";
-import { useGoals, useProjects, useTasks, useInvalidate } from "@/hooks/useTaskflowData";
+import { Plus, Target, ChevronRight, ChevronDown, Edit, Trash2, ListChecks, Network, LayoutDashboard, Search, X } from "lucide-react";
+import { useGoals, useProjects, useTasks, useInvalidate, useMembers } from "@/hooks/useTaskflowData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTaskDetail } from "@/hooks/useTaskDetail";
@@ -23,8 +23,10 @@ import {
   type GoalStatus,
   type Task,
   type Project,
+  type Member,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { InlineGoalTitle, InlineGoalStatus, InlineGoalProgress, QuickAddTaskToGoal } from "@/components/goals/GoalInlineControls";
 
 function monthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
@@ -38,6 +40,7 @@ export default function GoalsPage() {
   const { data: goals = [] } = useGoals();
   const { data: projects = [] } = useProjects();
   const { data: tasks = [] } = useTasks();
+  const { data: members = [] } = useMembers();
   const invalidate = useInvalidate();
 
   const today = new Date();
@@ -46,6 +49,9 @@ export default function GoalsPage() {
   const [open, setOpen] = useState(false);
   const [prefillParent, setPrefillParent] = useState<string | null>(null);
   const [prefillProject, setPrefillProject] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [projectFilter, setProjectFilter] = useState<string>("all");
 
   const availableMonths = useMemo(() => {
     const set = new Set<string>([month]);
@@ -53,7 +59,31 @@ export default function GoalsPage() {
     return Array.from(set).sort().reverse();
   }, [goals, month]);
 
-  const monthGoals = goals.filter((g) => g.month.slice(0, 10) === month);
+  const monthGoals = useMemo(() => {
+    const base = goals.filter((g) => g.month.slice(0, 10) === month);
+    const q = search.trim().toLowerCase();
+    const matchesAssignee = (g: Goal) => {
+      if (assigneeFilter === "all") return true;
+      return tasks.some((t) => t.goal_id === g.id && t.assignee_id === assigneeFilter);
+    };
+    const matchesProject = (g: Goal) => projectFilter === "all" || g.project_id === projectFilter;
+    const matchesSearch = (g: Goal) => !q || g.title.toLowerCase().includes(q) || (g.description || "").toLowerCase().includes(q);
+    // Keep parent ancestors when child matches, so tree stays intact
+    const directMatches = base.filter((g) => matchesAssignee(g) && matchesProject(g) && matchesSearch(g));
+    if (!q && assigneeFilter === "all" && projectFilter === "all") return base;
+    const keep = new Set(directMatches.map((g) => g.id));
+    let added = true;
+    while (added) {
+      added = false;
+      for (const g of base) {
+        if (keep.has(g.id) && g.parent_goal_id && !keep.has(g.parent_goal_id)) {
+          keep.add(g.parent_goal_id);
+          added = true;
+        }
+      }
+    }
+    return base.filter((g) => keep.has(g.id));
+  }, [goals, month, search, assigneeFilter, projectFilter, tasks]);
 
   const openCreate = (projectId: string | null = null, parentId: string | null = null) => {
     setEditing(null);
@@ -108,11 +138,43 @@ export default function GoalsPage() {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 p-3 border rounded-lg bg-card/50">
+        <div className="relative flex-1 min-w-[180px]">
+          <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="目標を検索..." className="h-8 pl-8 pr-7" />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 hover:bg-accent rounded">
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+        <Select value={projectFilter} onValueChange={setProjectFilter}>
+          <SelectTrigger className="h-8 w-44 text-xs"><SelectValue placeholder="事業部" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全事業部</SelectItem>
+            {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+          <SelectTrigger className="h-8 w-44 text-xs"><SelectValue placeholder="担当者" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全担当者</SelectItem>
+            {members.filter((m) => m.is_active).map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {(search || projectFilter !== "all" || assigneeFilter !== "all") && (
+          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setSearch(""); setProjectFilter("all"); setAssigneeFilter("all"); }}>
+            クリア
+          </Button>
+        )}
+      </div>
+
       <Tabs defaultValue="dashboard">
         <TabsList>
           <TabsTrigger value="dashboard"><LayoutDashboard className="h-3.5 w-3.5 mr-1" />月次ダッシュボード</TabsTrigger>
           <TabsTrigger value="tree"><Network className="h-3.5 w-3.5 mr-1" />樹形図</TabsTrigger>
         </TabsList>
+
 
         <TabsContent value="dashboard" className="mt-4">
           <Dashboard
@@ -238,20 +300,18 @@ function GoalRow({
         <div className="flex items-start gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-sm">{goal.title}</span>
-              <Badge variant="outline" className={cn("text-[10px]", GOAL_STATUS_COLORS[goal.status])}>
-                {GOAL_STATUS_LABELS[goal.status]}
-              </Badge>
+              <InlineGoalTitle goal={goal} />
+              <InlineGoalStatus goal={goal} />
             </div>
             {goal.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{goal.description}</p>}
             <div className="flex items-center gap-2 mt-2">
               <Progress value={pct} className="h-1.5 flex-1" />
-              <span className="text-[11px] text-muted-foreground tabular-nums">
-                {pct}% ({done}/{linked.length})
-              </span>
+              <InlineGoalProgress goal={goal} pct={pct} />
+              <span className="text-[11px] text-muted-foreground tabular-nums">({done}/{linked.length})</span>
             </div>
           </div>
           <div className="flex opacity-0 group-hover:opacity-100 transition">
+            <QuickAddTaskToGoal goal={goal} />
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onCreate(goal.project_id, goal.id)} title="子目標を追加">
               <Plus className="h-3.5 w-3.5" />
             </Button>
@@ -372,12 +432,11 @@ function TreeNode({
           {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
         </button>
         <Target className="h-3.5 w-3.5 text-primary shrink-0" />
-        <span className="font-medium text-sm truncate">{goal.title}</span>
-        <Badge variant="outline" className={cn("text-[10px] ml-1", GOAL_STATUS_COLORS[goal.status])}>
-          {GOAL_STATUS_LABELS[goal.status]}
-        </Badge>
-        <span className="text-[11px] text-muted-foreground ml-1 tabular-nums">{pct}%</span>
+        <div className="min-w-0"><InlineGoalTitle goal={goal} /></div>
+        <div className="ml-1"><InlineGoalStatus goal={goal} /></div>
+        <div className="ml-1"><InlineGoalProgress goal={goal} pct={pct} /></div>
         <div className="ml-auto flex opacity-0 group-hover:opacity-100 transition">
+          <QuickAddTaskToGoal goal={goal} />
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onCreate(goal.project_id, goal.id)} title="子目標">
             <Plus className="h-3 w-3" />
           </Button>

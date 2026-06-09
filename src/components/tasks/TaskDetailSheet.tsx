@@ -15,6 +15,7 @@ import { useCurrentMember } from "@/hooks/useCurrentMember";
 import { MemberAvatar } from "@/components/MemberAvatar";
 import { STATUS_LABELS, STATUS_ORDER, PRIORITY_LABELS, type TaskStatus, type TaskPriority, type Task } from "@/lib/types";
 import { Trash2, Plus, Paperclip, MessageSquare, Activity, ListChecks, Download, X } from "lucide-react";
+import { ProjectSelectWithCreate } from "@/components/projects/ProjectSelectWithCreate";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -167,20 +168,17 @@ function TaskDetailContent({ task, onClose }: { task: Task; onClose: () => void 
           </div>
           <div>
             <Label className="text-xs">プロジェクト</Label>
-            <Select
-              value={draft.project_id || "none"}
-              onValueChange={(v) => {
-                const newId = v === "none" ? null : v;
-                setDraft({ ...draft, project_id: newId });
-                update({ project_id: newId }, { action: "プロジェクト変更" });
-              }}
-            >
-              <SelectTrigger className="h-9 mt-1"><SelectValue placeholder="なし" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">なし</SelectItem>
-                {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="mt-1">
+              <ProjectSelectWithCreate
+                value={draft.project_id || "none"}
+                onChange={(v) => {
+                  const newId = v === "none" ? null : v;
+                  setDraft({ ...draft, project_id: newId });
+                  update({ project_id: newId }, { action: "プロジェクト変更" });
+                }}
+                className="h-9"
+              />
+            </div>
           </div>
           <div>
             <Label className="text-xs">期日</Label>
