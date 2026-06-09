@@ -205,6 +205,34 @@ function TaskDetailContent({ task, onClose }: { task: Task; onClose: () => void 
         </div>
 
         <div>
+          <Label className="text-xs">紐付け目標</Label>
+          <Select
+            value={draft.goal_id || "none"}
+            onValueChange={(v) => {
+              const newId = v === "none" ? null : v;
+              setDraft({ ...draft, goal_id: newId });
+              update({ goal_id: newId }, { action: "目標変更" });
+            }}
+          >
+            <SelectTrigger className="h-9 mt-1"><SelectValue placeholder="なし" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">なし</SelectItem>
+              {goals
+                .filter((g) => !draft.project_id || !g.project_id || g.project_id === draft.project_id)
+                .map((g) => {
+                  const proj = projects.find((p) => p.id === g.project_id);
+                  const month = g.month.slice(0, 7);
+                  return (
+                    <SelectItem key={g.id} value={g.id}>
+                      [{month}] {proj?.name ? `${proj.name} / ` : ""}{g.title}
+                    </SelectItem>
+                  );
+                })}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
           <Label className="text-xs">説明</Label>
           <Textarea
             value={draft.description || ""}
