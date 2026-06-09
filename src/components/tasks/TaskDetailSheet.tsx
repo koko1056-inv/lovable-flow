@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useTaskDetail } from "@/hooks/useTaskDetail";
-import { useTasks, useMembers, useProjects, useTags, useTaskTags } from "@/hooks/useTaskflowData";
+import { useTasks, useMembers, useProjects, useTags, useTaskTags, useGoals } from "@/hooks/useTaskflowData";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useCurrentMember } from "@/hooks/useCurrentMember";
