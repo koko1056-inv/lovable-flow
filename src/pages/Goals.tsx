@@ -289,6 +289,8 @@ function GoalRow({
   onEdit: (g: Goal) => void;
   onDelete: (id: string) => void;
 }) {
+  const [showTasks, setShowTasks] = useState(false);
+  const { open: openTask } = useTaskDetail();
   const children = allInProject.filter((g) => g.parent_goal_id === goal.id);
   const { linked, done, pct } = computeGoalStats(goal, tasks);
   return (
@@ -307,7 +309,13 @@ function GoalRow({
             <div className="flex items-center gap-2 mt-2">
               <Progress value={pct} className="h-1.5 flex-1" />
               <InlineGoalProgress goal={goal} pct={pct} />
-              <span className="text-[11px] text-muted-foreground tabular-nums">({done}/{linked.length})</span>
+              <button
+                className="text-[11px] text-muted-foreground tabular-nums hover:text-foreground hover:underline"
+                onClick={(e) => { e.stopPropagation(); setShowTasks((v) => !v); }}
+                title={showTasks ? "タスク一覧を閉じる" : "タスク一覧を開く"}
+              >
+                ({done}/{linked.length})
+              </button>
             </div>
           </div>
           <div className="flex opacity-0 group-hover:opacity-100 transition">
@@ -323,6 +331,23 @@ function GoalRow({
             </Button>
           </div>
         </div>
+        {showTasks && linked.length > 0 && (
+          <ul className="mt-2 space-y-1 border-t pt-2">
+            {linked.map((t) => (
+              <li
+                key={t.id}
+                className="flex items-center gap-1.5 text-sm hover:bg-accent/40 rounded px-1.5 py-0.5 cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); openTask(t.id); }}
+              >
+                <ListChecks className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className={cn("truncate", t.status === "done" && "line-through text-muted-foreground")}>{t.title}</span>
+                <Badge variant="outline" className={cn("text-[10px]", STATUS_COLORS[t.status])}>
+                  {STATUS_LABELS[t.status]}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       {children.length > 0 && (
         <ul className="space-y-2 mt-2">
