@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useMembers, useProjects, useInvalidate } from "@/hooks/useTaskflowData";
+import { useMembers, useProjects, useInvalidate, useProjectMembers } from "@/hooks/useTaskflowData";
 import { useCurrentMember } from "@/hooks/useCurrentMember";
+import { ProjectSelectWithCreate } from "@/components/projects/ProjectSelectWithCreate";
 import type { TaskPriority, TaskStatus } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -32,6 +33,7 @@ export function NewTaskButton({
   const [open, setOpen] = useState(false);
   const { data: members = [] } = useMembers();
   const { data: projects = [] } = useProjects();
+  const { data: projectMembers = [] } = useProjectMembers();
   const invalidate = useInvalidate();
   const { memberId } = useCurrentMember();
 
@@ -109,19 +111,21 @@ export function NewTaskButton({
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">未割当</SelectItem>
-                  {members.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+                  {(() => {
+                    const allowedIds = projectId !== "none"
+                      ? new Set(projectMembers.filter((pm) => pm.project_id === projectId).map((pm) => pm.member_id))
+                      : null;
+                    const filtered = allowedIds && allowedIds.size > 0
+                      ? members.filter((m) => allowedIds.has(m.id))
+                      : members;
+                    return filtered.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>);
+                  })()}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label>プロジェクト</Label>
-              <Select value={projectId} onValueChange={setProjectId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">なし</SelectItem>
-                  {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <ProjectSelectWithCreate value={projectId} onChange={setProjectId} />
             </div>
           </div>
         </div>
