@@ -228,7 +228,7 @@ function GoalRow({
   onDelete: (id: string) => void;
 }) {
   const children = allInProject.filter((g) => g.parent_goal_id === goal.id);
-  const { linked, done, pct } = GoalSummary({ goal, tasks });
+  const { linked, done, pct } = computeGoalStats(goal, tasks);
   return (
     <li>
       <div
