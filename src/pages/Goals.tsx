@@ -40,6 +40,7 @@ export default function GoalsPage() {
   const { data: goals = [] } = useGoals();
   const { data: projects = [] } = useProjects();
   const { data: tasks = [] } = useTasks();
+  const { data: members = [] } = useMembers();
   const invalidate = useInvalidate();
 
   const today = new Date();
@@ -48,6 +49,9 @@ export default function GoalsPage() {
   const [open, setOpen] = useState(false);
   const [prefillParent, setPrefillParent] = useState<string | null>(null);
   const [prefillProject, setPrefillProject] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [projectFilter, setProjectFilter] = useState<string>("all");
 
   const availableMonths = useMemo(() => {
     const set = new Set<string>([month]);
@@ -55,7 +59,31 @@ export default function GoalsPage() {
     return Array.from(set).sort().reverse();
   }, [goals, month]);
 
-  const monthGoals = goals.filter((g) => g.month.slice(0, 10) === month);
+  const monthGoals = useMemo(() => {
+    const base = goals.filter((g) => g.month.slice(0, 10) === month);
+    const q = search.trim().toLowerCase();
+    const matchesAssignee = (g: Goal) => {
+      if (assigneeFilter === "all") return true;
+      return tasks.some((t) => t.goal_id === g.id && t.assignee_id === assigneeFilter);
+    };
+    const matchesProject = (g: Goal) => projectFilter === "all" || g.project_id === projectFilter;
+    const matchesSearch = (g: Goal) => !q || g.title.toLowerCase().includes(q) || (g.description || "").toLowerCase().includes(q);
+    // Keep parent ancestors when child matches, so tree stays intact
+    const directMatches = base.filter((g) => matchesAssignee(g) && matchesProject(g) && matchesSearch(g));
+    if (!q && assigneeFilter === "all" && projectFilter === "all") return base;
+    const keep = new Set(directMatches.map((g) => g.id));
+    let added = true;
+    while (added) {
+      added = false;
+      for (const g of base) {
+        if (keep.has(g.id) && g.parent_goal_id && !keep.has(g.parent_goal_id)) {
+          keep.add(g.parent_goal_id);
+          added = true;
+        }
+      }
+    }
+    return base.filter((g) => keep.has(g.id));
+  }, [goals, month, search, assigneeFilter, projectFilter, tasks]);
 
   const openCreate = (projectId: string | null = null, parentId: string | null = null) => {
     setEditing(null);
